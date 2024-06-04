@@ -10182,9 +10182,9 @@ __metadata:
     typescript: "npm:^5.4.5"
     vite: "npm:^5.2.11"
   peerDependencies:
-    "@mantine/core": ">=7"
-    "@mantine/dates": ">=7"
-    "@mantine/hooks": ">=7"
+    "@mantine/core": ">=6"
+    "@mantine/dates": ">=6"
+    "@mantine/hooks": ">=6"
     dayjs: ">=1"
     react: ">=18"
     react-querybuilder: ^7.4.0

@@ -127,6 +127,7 @@ export const RuleGroupHeaderComponents = React.memo(
             ruleOrGroup={rg.ruleGroup}
           />
         )}
+        {rg.path.length > 0 && <span className="statement">Any of the following are true...</span>}
         {!rg.schema.showCombinatorsBetweenRules && !rg.schema.independentCombinators && (
           <CombinatorSelectorControlElement
             key={TestID.combinators}
@@ -282,6 +283,8 @@ export const RuleGroupBodyComponents = React.memo(
             const shiftUpDisabled = pathsAreEqual([0], thisPath);
             const shiftDownDisabled = rg.path.length === 0 && idx === ruleArrayLength - 1;
             const key = typeof r === 'string' ? [...thisPath, r].join('-') : r.id;
+            const showCombinatorBetweenRules =
+              !rg.schema.independentCombinators && rg.schema.showCombinatorsBetweenRules;
             return (
               <Fragment key={key}>
                 {typeof r === 'string' ? (
@@ -338,9 +341,7 @@ export const RuleGroupBodyComponents = React.memo(
                     shiftDownDisabled={shiftDownDisabled}
                     context={rg.context}
                     combinator={
-                      idx === 1 &&
-                      !rg.schema.independentCombinators &&
-                      rg.schema.showCombinatorsBetweenRules ? (
+                      idx === 1 && showCombinatorBetweenRules ? (
                         <InlineCombinatorControlElement
                           key={TestID.inlineCombinator}
                           options={rg.schema.combinators}
@@ -357,12 +358,12 @@ export const RuleGroupBodyComponents = React.memo(
                           disabled={rg.disabled}
                           schema={rg.schema}
                         />
-                      ) : idx > 1 ? (
-                        <span>{rg.combinator}</span>
-                      ) : rg.path.length === 0 ? (
-                        <span>Where</span>
+                      ) : idx > 1 && showCombinatorBetweenRules ? (
+                        <span className={rg.classNames.combinators}>{rg.combinator}</span>
+                      ) : rg.path.length === 0 && showCombinatorBetweenRules ? (
+                        <span className={rg.classNames.combinators}>Where</span>
                       ) : (
-                        <span />
+                        <span className={rg.classNames.combinators} />
                       )
                     }
                   />

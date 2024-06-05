@@ -4096,7 +4096,8 @@ var RuleComponents = React9.memo((r) => {
         lockRuleAction: LockRuleActionControlElement,
         removeRuleAction: RemoveRuleActionControlElement
       }
-    }
+    },
+    combinator
   } = r;
   return /* @__PURE__ */ React9.createElement(React9.Fragment, null, r.schema.showShiftActions && /* @__PURE__ */ React9.createElement(
     ShiftActionsControlElement,
@@ -4139,7 +4140,7 @@ var RuleComponents = React9.memo((r) => {
       schema: r.schema,
       ruleOrGroup: r.rule
     }
-  ), /* @__PURE__ */ React9.createElement(
+  ), combinator, /* @__PURE__ */ React9.createElement(
     FieldSelectorControlElement,
     {
       testID: TestID.fields,
@@ -4512,25 +4513,7 @@ var RuleGroupBodyComponents = React10.memo(
         const shiftUpDisabled = pathsAreEqual([0], thisPath);
         const shiftDownDisabled = rg.path.length === 0 && idx === ruleArrayLength - 1;
         const key = typeof r === "string" ? [...thisPath, r].join("-") : r.id;
-        return /* @__PURE__ */ React10.createElement(Fragment3, { key }, idx > 0 && !rg.schema.independentCombinators && rg.schema.showCombinatorsBetweenRules && /* @__PURE__ */ React10.createElement(
-          InlineCombinatorControlElement,
-          {
-            key: TestID.inlineCombinator,
-            options: rg.schema.combinators,
-            value: rg.combinator,
-            title: rg.translations.combinators.title,
-            className: rg.classNames.combinators,
-            handleOnChange: rg.onCombinatorChange,
-            rules: rg.ruleGroup.rules,
-            level: rg.path.length,
-            context: rg.context,
-            validation: rg.validationResult,
-            component: CombinatorSelectorControlElement,
-            path: thisPath,
-            disabled: rg.disabled,
-            schema: rg.schema
-          }
-        ), typeof r === "string" ? /* @__PURE__ */ React10.createElement(
+        return /* @__PURE__ */ React10.createElement(Fragment3, { key }, typeof r === "string" ? /* @__PURE__ */ React10.createElement(
           InlineCombinatorControlElement,
           {
             key: `${TestID.inlineCombinator}-independent`,
@@ -4585,7 +4568,26 @@ var RuleGroupBodyComponents = React10.memo(
             translations: rg.translations,
             shiftUpDisabled,
             shiftDownDisabled,
-            context: rg.context
+            context: rg.context,
+            combinator: idx === 1 && !rg.schema.independentCombinators && rg.schema.showCombinatorsBetweenRules ? /* @__PURE__ */ React10.createElement(
+              InlineCombinatorControlElement,
+              {
+                key: TestID.inlineCombinator,
+                options: rg.schema.combinators,
+                value: rg.combinator,
+                title: rg.translations.combinators.title,
+                className: rg.classNames.combinators,
+                handleOnChange: rg.onCombinatorChange,
+                rules: rg.ruleGroup.rules,
+                level: rg.path.length,
+                context: rg.context,
+                validation: rg.validationResult,
+                component: CombinatorSelectorControlElement,
+                path: thisPath,
+                disabled: rg.disabled,
+                schema: rg.schema
+              }
+            ) : idx > 1 ? /* @__PURE__ */ React10.createElement("span", null, rg.combinator) : rg.path.length === 0 ? /* @__PURE__ */ React10.createElement("span", null, "Where") : /* @__PURE__ */ React10.createElement("span", null)
           }
         ));
       }

@@ -50,6 +50,7 @@ export const RuleComponents = React.memo((r: RuleProps & ReturnType<typeof useRu
         removeRuleAction: RemoveRuleActionControlElement,
       },
     },
+    combinator,
   } = r;
 
   return (
@@ -95,6 +96,7 @@ export const RuleComponents = React.memo((r: RuleProps & ReturnType<typeof useRu
           ruleOrGroup={r.rule}
         />
       )}
+      {combinator}
       <FieldSelectorControlElement
         testID={TestID.fields}
         options={r.schema.fields}

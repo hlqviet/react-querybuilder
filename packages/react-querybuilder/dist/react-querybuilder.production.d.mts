@@ -1118,6 +1118,7 @@ interface CommonRuleAndGroupProps<F extends FullField = FullField, O extends str
     shiftUpDisabled?: boolean;
     shiftDownDisabled?: boolean;
     context?: any;
+    combinator?: ReactNode;
 }
 /**
  * Return type of {@link useRuleGroupDnD} hook.
@@ -2089,6 +2090,7 @@ declare const useRule: (props: RuleProps) => {
     shiftUpDisabled?: boolean | undefined;
     shiftDownDisabled?: boolean | undefined;
     context?: any;
+    combinator?: react.ReactNode;
     isDragging?: boolean | undefined;
     isOver?: boolean | undefined;
     dropEffect?: DropEffect | undefined;

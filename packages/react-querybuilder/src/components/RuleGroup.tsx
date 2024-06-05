@@ -266,26 +266,6 @@ export const RuleGroupBodyComponents = React.memo(
             const key = typeof r === 'string' ? [...thisPath, r].join('-') : r.id;
             return (
               <Fragment key={key}>
-                {idx > 0 &&
-                  !rg.schema.independentCombinators &&
-                  rg.schema.showCombinatorsBetweenRules && (
-                    <InlineCombinatorControlElement
-                      key={TestID.inlineCombinator}
-                      options={rg.schema.combinators}
-                      value={rg.combinator}
-                      title={rg.translations.combinators.title}
-                      className={rg.classNames.combinators}
-                      handleOnChange={rg.onCombinatorChange}
-                      rules={rg.ruleGroup.rules}
-                      level={rg.path.length}
-                      context={rg.context}
-                      validation={rg.validationResult}
-                      component={CombinatorSelectorControlElement}
-                      path={thisPath}
-                      disabled={rg.disabled}
-                      schema={rg.schema}
-                    />
-                  )}
                 {typeof r === 'string' ? (
                   <InlineCombinatorControlElement
                     key={`${TestID.inlineCombinator}-independent`}
@@ -339,6 +319,34 @@ export const RuleGroupBodyComponents = React.memo(
                     shiftUpDisabled={shiftUpDisabled}
                     shiftDownDisabled={shiftDownDisabled}
                     context={rg.context}
+                    combinator={
+                      idx === 1 &&
+                      !rg.schema.independentCombinators &&
+                      rg.schema.showCombinatorsBetweenRules ? (
+                        <InlineCombinatorControlElement
+                          key={TestID.inlineCombinator}
+                          options={rg.schema.combinators}
+                          value={rg.combinator}
+                          title={rg.translations.combinators.title}
+                          className={rg.classNames.combinators}
+                          handleOnChange={rg.onCombinatorChange}
+                          rules={rg.ruleGroup.rules}
+                          level={rg.path.length}
+                          context={rg.context}
+                          validation={rg.validationResult}
+                          component={CombinatorSelectorControlElement}
+                          path={thisPath}
+                          disabled={rg.disabled}
+                          schema={rg.schema}
+                        />
+                      ) : idx > 1 ? (
+                        <span>{rg.combinator}</span>
+                      ) : rg.path.length === 0 ? (
+                        <span>Where</span>
+                      ) : (
+                        <span />
+                      )
+                    }
                   />
                 )}
               </Fragment>

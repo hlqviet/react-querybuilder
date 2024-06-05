@@ -4589,7 +4589,7 @@ var RuleGroupHeaderComponents = React10.memo(
         schema: rg.schema,
         ruleOrGroup: rg.ruleGroup
       }
-    ), !rg.schema.showCombinatorsBetweenRules && !rg.schema.independentCombinators && /* @__PURE__ */ React10.createElement(
+    ), rg.path.length > 0 && /* @__PURE__ */ React10.createElement("span", { className: "statement" }, "Any of the following are true..."), !rg.schema.showCombinatorsBetweenRules && !rg.schema.independentCombinators && /* @__PURE__ */ React10.createElement(
       CombinatorSelectorControlElement,
       {
         key: TestID.combinators,
@@ -4739,6 +4739,7 @@ var RuleGroupBodyComponents = React10.memo(
         const shiftUpDisabled = pathsAreEqual([0], thisPath);
         const shiftDownDisabled = rg.path.length === 0 && idx === ruleArrayLength - 1;
         const key = typeof r === "string" ? [...thisPath, r].join("-") : r.id;
+        const showCombinatorBetweenRules = !rg.schema.independentCombinators && rg.schema.showCombinatorsBetweenRules;
         return /* @__PURE__ */ React10.createElement(import_react15.Fragment, { key }, typeof r === "string" ? /* @__PURE__ */ React10.createElement(
           InlineCombinatorControlElement,
           {
@@ -4795,7 +4796,7 @@ var RuleGroupBodyComponents = React10.memo(
             shiftUpDisabled,
             shiftDownDisabled,
             context: rg.context,
-            combinator: idx === 1 && !rg.schema.independentCombinators && rg.schema.showCombinatorsBetweenRules ? /* @__PURE__ */ React10.createElement(
+            combinator: idx === 1 && showCombinatorBetweenRules ? /* @__PURE__ */ React10.createElement(
               InlineCombinatorControlElement,
               {
                 key: TestID.inlineCombinator,
@@ -4813,7 +4814,7 @@ var RuleGroupBodyComponents = React10.memo(
                 disabled: rg.disabled,
                 schema: rg.schema
               }
-            ) : idx > 1 ? /* @__PURE__ */ React10.createElement("span", null, rg.combinator) : rg.path.length === 0 ? /* @__PURE__ */ React10.createElement("span", null, "Where") : /* @__PURE__ */ React10.createElement("span", null)
+            ) : idx > 1 && showCombinatorBetweenRules ? /* @__PURE__ */ React10.createElement("span", { className: rg.classNames.combinators }, rg.combinator) : rg.path.length === 0 && showCombinatorBetweenRules ? /* @__PURE__ */ React10.createElement("span", { className: rg.classNames.combinators }, "Where") : /* @__PURE__ */ React10.createElement("span", { className: rg.classNames.combinators })
           }
         ));
       }

@@ -288,7 +288,7 @@ function parseJsonLogic(rqbJsonLogic, options = {}) {
             return { combinator: "and", rules: [newRule] };
           }
           return newRule;
-        } else if (isJsonLogicBetweenExclusive(logic["!"]) && isRuleGroupType(rule2)) {
+        } else if (isJsonLogicBetweenExclusive(logic["!"]) || isRuleGroupType(rule2)) {
           return { ...rule2, not: true };
         }
         return { combinator: "and", rules: [rule2], not: true };

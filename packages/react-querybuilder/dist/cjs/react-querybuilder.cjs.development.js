@@ -453,6 +453,96 @@ var messages = {
   errorEnabledDndWithoutReactDnD: "QueryBuilder was rendered with the enableDragAndDrop prop set to true, but either react-dnd or react-dnd-html5-backend (or both) was not installed. To enable drag-and-drop functionality, install both packages and wrap QueryBuilder in QueryBuilderDnD from @react-querybuilder/dnd."
 };
 
+// src/redux/_internal.ts
+var import_react_redux2 = require("react-redux");
+
+// src/redux/index.ts
+var import_toolkit3 = require("@reduxjs/toolkit");
+var React5 = __toESM(require("react"));
+var import_react_redux = require("react-redux");
+
+// src/redux/queriesSlice.ts
+var import_toolkit = require("@reduxjs/toolkit");
+var initialState = {};
+var queriesSlice = (0, import_toolkit.createSlice)({
+  name: "queries",
+  initialState,
+  reducers: {
+    setQueryState: (state, { payload: { qbId, query } }) => {
+      state[qbId] = query;
+    }
+  },
+  selectors: {
+    getQuerySelectorById: (state, qbId) => state[qbId]
+  }
+});
+
+// src/redux/warningsSlice.ts
+var import_toolkit2 = require("@reduxjs/toolkit");
+var initialState2 = {
+  [messages.errorInvalidIndependentCombinatorsProp]: false,
+  [messages.errorUnnecessaryIndependentCombinatorsProp]: false,
+  [messages.errorDeprecatedRuleGroupProps]: false,
+  [messages.errorDeprecatedRuleProps]: false,
+  [messages.errorBothQueryDefaultQuery]: false,
+  [messages.errorUncontrolledToControlled]: false,
+  [messages.errorControlledToUncontrolled]: false,
+  [messages.errorEnabledDndWithoutReactDnD]: false
+};
+var warningsSlice = (0, import_toolkit2.createSlice)({
+  name: "warnings",
+  initialState: initialState2,
+  reducers: {
+    rqbWarn: (state, { payload }) => {
+      if (!state[payload]) {
+        console.error(payload);
+        state[payload] = true;
+      }
+    }
+  }
+});
+
+// src/redux/index.ts
+var preloadedState = {
+  queries: queriesSlice.getInitialState(),
+  warnings: warningsSlice.getInitialState()
+};
+var queryBuilderStore = (0, import_toolkit3.configureStore)({
+  reducer: {
+    queries: queriesSlice.reducer,
+    warnings: warningsSlice.reducer
+  },
+  preloadedState,
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+    // Ignore non-serializable values in setQueryState actions and rule `value`s
+    // https://redux-toolkit.js.org/usage/usage-guide#working-with-non-serializable-data
+    serializableCheck: {
+      ignoredActions: ["queries/setQueryState"],
+      ignoredPaths: [/^queries\b.*\.rules\.\d+\.value$/]
+    }
+  })
+});
+var QueryBuilderStateContext = React5.createContext(null);
+var useQueryBuilderSelector = (0, import_react_redux.createSelectorHook)(QueryBuilderStateContext);
+var getQuerySelectorById = (qbId) => (state) => queriesSlice.selectors.getQuerySelectorById({ queries: state.queries }, qbId);
+
+// src/redux/_internal.ts
+var _RQB_INTERNAL_dispatchThunk = ({
+  payload,
+  onQueryChange
+}) => (dispatch) => {
+  dispatch(queriesSlice.actions.setQueryState(payload));
+  if (typeof onQueryChange === "function") {
+    onQueryChange(payload.query);
+  }
+};
+var useRQB_INTERNAL_QueryBuilderDispatch = (0, import_react_redux2.createDispatchHook)(QueryBuilderStateContext);
+var useRQB_INTERNAL_QueryBuilderStore = (0, import_react_redux2.createStoreHook)(QueryBuilderStateContext);
+var { rqbWarn: _SYNC_rqbWarn } = warningsSlice.actions;
+var rqbWarn = (msg) => (dispatch) => {
+  setTimeout(() => dispatch(_SYNC_rqbWarn(msg)));
+};
+
 // src/hooks/usePrevious.ts
 var import_react2 = require("react");
 var usePrevious = (value) => {
@@ -465,50 +555,38 @@ var usePrevious = (value) => {
 };
 
 // src/hooks/useControlledOrUncontrolled.ts
-var didWarnBothQueryDefaultQuery = false;
-var didWarnUncontrolledToControlled = false;
-var didWarnControlledToUncontrolled = false;
 var useControlledOrUncontrolled = (params) => {
+  const dispatch = useRQB_INTERNAL_QueryBuilderDispatch();
   const { defaultQuery, queryProp } = params;
   const prevQueryPresent = usePrevious(!!queryProp);
   if (process.env.NODE_ENV !== "production") {
-    if (!!queryProp && !!defaultQuery && !didWarnBothQueryDefaultQuery) {
-      console.error(messages.errorBothQueryDefaultQuery);
-      didWarnBothQueryDefaultQuery = true;
-    } else if (prevQueryPresent === true && !queryProp && !!defaultQuery && !didWarnControlledToUncontrolled) {
-      console.error(messages.errorControlledToUncontrolled);
-      didWarnControlledToUncontrolled = true;
-    } else if (prevQueryPresent === false && !!queryProp && !defaultQuery && !didWarnUncontrolledToControlled) {
-      console.error(messages.errorUncontrolledToControlled);
-      didWarnUncontrolledToControlled = true;
+    if (!!queryProp && !!defaultQuery) {
+      dispatch(rqbWarn(messages.errorBothQueryDefaultQuery));
+    } else if (prevQueryPresent === true && !queryProp && !!defaultQuery) {
+      dispatch(rqbWarn(messages.errorControlledToUncontrolled));
+    } else if (prevQueryPresent === false && !!queryProp && !defaultQuery) {
+      dispatch(rqbWarn(messages.errorUncontrolledToControlled));
     }
   }
 };
 
 // src/hooks/useDeprecatedProps.ts
-var didWarnUsingInvalidIndependentCombinatorsProp = false;
-var didWarnUsingUnnecessaryIndependentCombinatorsProp = false;
-var didWarnUsingDeprecatedRuleProps = false;
-var didWarnUsingDeprecatedRuleGroupProps = false;
 function useDeprecatedProps(type, logWarning, otherParams) {
+  const dispatch = useRQB_INTERNAL_QueryBuilderDispatch();
   if (process.env.NODE_ENV !== "production" && logWarning) {
     if (type === "independentCombinators") {
-      if (!didWarnUsingInvalidIndependentCombinatorsProp && otherParams === "invalid") {
-        console.error(messages.errorInvalidIndependentCombinatorsProp);
-        didWarnUsingInvalidIndependentCombinatorsProp = true;
+      if (otherParams === "invalid") {
+        dispatch(rqbWarn(messages.errorInvalidIndependentCombinatorsProp));
       }
-      if (!didWarnUsingUnnecessaryIndependentCombinatorsProp && otherParams === "unnecessary") {
-        console.error(messages.errorUnnecessaryIndependentCombinatorsProp);
-        didWarnUsingUnnecessaryIndependentCombinatorsProp = true;
+      if (otherParams === "unnecessary") {
+        dispatch(rqbWarn(messages.errorUnnecessaryIndependentCombinatorsProp));
       }
     }
-    if (type === "rule" && !didWarnUsingDeprecatedRuleProps) {
-      console.error(messages.errorDeprecatedRuleProps);
-      didWarnUsingDeprecatedRuleProps = true;
+    if (type === "rule") {
+      dispatch(rqbWarn(messages.errorDeprecatedRuleProps));
     }
-    if (type === "ruleGroup" && !didWarnUsingDeprecatedRuleGroupProps) {
-      console.error(messages.errorDeprecatedRuleGroupProps);
-      didWarnUsingDeprecatedRuleGroupProps = true;
+    if (type === "ruleGroup") {
+      dispatch(rqbWarn(messages.errorDeprecatedRuleGroupProps));
     }
   }
 }
@@ -2133,7 +2211,7 @@ if (cryptoModule) {
 }
 
 // src/utils/getCompatContextProvider.tsx
-var React5 = __toESM(require("react"));
+var React6 = __toESM(require("react"));
 var import_react3 = require("react");
 
 // src/utils/mergeClassnames.ts
@@ -2226,7 +2304,7 @@ var getCompatContextProvider = (gccpProps) => {
       }),
       [classnamesObject, newTranslations, props.controlElements, rqbContext]
     );
-    return /* @__PURE__ */ React5.createElement(QueryBuilderContext.Provider, { value: newContextProps, key }, props.children);
+    return /* @__PURE__ */ React6.createElement(QueryBuilderContext.Provider, { value: newContextProps, key }, props.children);
   };
 };
 
@@ -2490,8 +2568,8 @@ var move = (query, oldPath, newPath, { clone = false, combinators = defaultCombi
 };
 
 // src/utils/toOptions.tsx
-var React6 = __toESM(require("react"));
-var toOptions = (arr) => isOptionGroupArray(arr) ? arr.map((og) => /* @__PURE__ */ React6.createElement("optgroup", { key: og.label, label: og.label }, og.options.map((opt) => /* @__PURE__ */ React6.createElement("option", { key: opt.name, value: opt.name, disabled: opt.disabled }, opt.label)))) : Array.isArray(arr) ? arr.map((opt) => /* @__PURE__ */ React6.createElement("option", { key: opt.name, value: opt.name, disabled: opt.disabled }, opt.label)) : null;
+var React7 = __toESM(require("react"));
+var toOptions = (arr) => isOptionGroupArray(arr) ? arr.map((og) => /* @__PURE__ */ React7.createElement("optgroup", { key: og.label, label: og.label }, og.options.map((opt) => /* @__PURE__ */ React7.createElement("option", { key: opt.name, value: opt.name, disabled: opt.disabled }, opt.label)))) : Array.isArray(arr) ? arr.map((opt) => /* @__PURE__ */ React7.createElement("option", { key: opt.name, value: opt.name, disabled: opt.disabled }, opt.label)) : null;
 
 // src/utils/transformQuery.ts
 var import_immer5 = require("immer");
@@ -2696,59 +2774,6 @@ var useMergedContext = (props) => {
 // src/hooks/useQueryBuilderSchema.ts
 var import_clsx2 = require("clsx");
 var import_react6 = require("react");
-
-// src/redux/queriesSlice.ts
-var import_toolkit = require("@reduxjs/toolkit");
-var initialState = {};
-var queriesSlice = (0, import_toolkit.createSlice)({
-  name: "queries",
-  initialState,
-  reducers: {
-    setQueryState: (state, { payload: { qbId, query } }) => {
-      state[qbId] = query;
-    }
-  },
-  selectors: {
-    getQuerySelectorById: (state, qbId) => state[qbId]
-  }
-});
-
-// src/redux/index.ts
-var import_toolkit2 = require("@reduxjs/toolkit");
-var React7 = __toESM(require("react"));
-var import_react_redux = require("react-redux");
-var preloadedState = { queries: queriesSlice.getInitialState() };
-var queryBuilderStore = (0, import_toolkit2.configureStore)({
-  reducer: { queries: queriesSlice.reducer },
-  preloadedState,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
-    // Ignore non-serializable values in setQueryState actions and rule `value`s
-    // https://redux-toolkit.js.org/usage/usage-guide#working-with-non-serializable-data
-    serializableCheck: {
-      ignoredActions: ["queries/setQueryState"],
-      ignoredPaths: [/^queries\b.*\.rules\.\d+\.value$/]
-    }
-  })
-});
-var QueryBuilderStateContext = React7.createContext(null);
-var useQueryBuilderSelector = (0, import_react_redux.createSelectorHook)(QueryBuilderStateContext);
-var getQuerySelectorById = (qbId) => (state) => queriesSlice.selectors.getQuerySelectorById(state, qbId);
-
-// src/redux/_internal.ts
-var import_react_redux2 = require("react-redux");
-var _RQB_INTERNAL_dispatchThunk = ({
-  payload,
-  onQueryChange
-}) => (dispatch) => {
-  dispatch(queriesSlice.actions.setQueryState(payload));
-  if (typeof onQueryChange === "function") {
-    onQueryChange(payload.query);
-  }
-};
-var useRQB_INTERNAL_QueryBuilderDispatch = (0, import_react_redux2.createDispatchHook)(QueryBuilderStateContext);
-var useRQB_INTERNAL_QueryBuilderStore = (0, import_react_redux2.createStoreHook)(QueryBuilderStateContext);
-
-// src/hooks/useQueryBuilderSchema.ts
 var defaultValidationResult = {};
 var defaultValidationMap = {};
 var defaultGetValueEditorSeparator = () => null;
@@ -2824,6 +2849,10 @@ function useQueryBuilderSchema(props, setup) {
   const autoSelectOperator = !!autoSelectOperatorProp;
   const addRuleToNewGroups = !!addRuleToNewGroupsProp;
   const listsAsArrays = !!listsAsArraysProp;
+  useControlledOrUncontrolled({
+    defaultQuery: defaultQueryProp,
+    queryProp
+  });
   const queryBuilderStore2 = useRQB_INTERNAL_QueryBuilderStore();
   const queryBuilderDispatch = useRQB_INTERNAL_QueryBuilderDispatch();
   const querySelector = (0, import_react6.useMemo)(() => getQuerySelectorById(setup.qbId), [setup.qbId]);
@@ -2853,7 +2882,11 @@ function useQueryBuilderSchema(props, setup) {
     invalidIC ? "invalid" : "unnecessary"
     // 'invalid'
   );
+  const hasRunMountQueryChange = (0, import_react6.useRef)(false);
   (0, import_react6.useEffect)(() => {
+    if (hasRunMountQueryChange.current)
+      return;
+    hasRunMountQueryChange.current = true;
     queryBuilderDispatch(
       _RQB_INTERNAL_dispatchThunk({
         payload: { qbId, query: rootGroup },
@@ -2863,7 +2896,7 @@ function useQueryBuilderSchema(props, setup) {
         )
       })
     );
-  }, []);
+  }, [enableMountQueryChange, onQueryChange, qbId, queryBuilderDispatch, rootGroup]);
   const dispatchQuery = (0, import_react6.useCallback)(
     (newQuery) => {
       queryBuilderDispatch(
@@ -3188,8 +3221,6 @@ var getFirstOptionsFrom = (opts, r, listsAsArrays) => {
 var useQueryBuilderSetup = (props) => {
   const [qbId] = (0, import_react7.useState)(generateID);
   const {
-    query: queryProp,
-    defaultQuery,
     fields: fieldsPropOriginal,
     baseField,
     operators: operatorsProp,
@@ -3511,10 +3542,6 @@ var useQueryBuilderSetup = (props) => {
     },
     [addRuleToNewGroups, combinators, createRule, idGenerator]
   );
-  useControlledOrUncontrolled({
-    defaultQuery,
-    queryProp
-  });
   return {
     qbId,
     rqbContext,
@@ -4227,11 +4254,11 @@ var QueryBuilder = (props) => {
 var React9 = __toESM(require("react"));
 var Rule = React9.memo((props) => {
   const r = useRule(props);
-  r.cloneRule = useStopEventPropagation(r.cloneRule);
-  r.toggleLockRule = useStopEventPropagation(r.toggleLockRule);
-  r.removeRule = useStopEventPropagation(r.removeRule);
-  r.shiftRuleUp = useStopEventPropagation(r.shiftRuleUp);
-  r.shiftRuleDown = useStopEventPropagation(r.shiftRuleDown);
+  const cloneRule = useStopEventPropagation(r.cloneRule);
+  const toggleLockRule = useStopEventPropagation(r.toggleLockRule);
+  const removeRule = useStopEventPropagation(r.removeRule);
+  const shiftRuleUp = useStopEventPropagation(r.shiftRuleUp);
+  const shiftRuleDown = useStopEventPropagation(r.shiftRuleDown);
   return /* @__PURE__ */ React9.createElement(
     "div",
     {
@@ -4244,7 +4271,17 @@ var Rule = React9.memo((props) => {
       "data-level": r.path.length,
       "data-path": JSON.stringify(r.path)
     },
-    /* @__PURE__ */ React9.createElement(RuleComponents, { ...r })
+    /* @__PURE__ */ React9.createElement(
+      RuleComponents,
+      {
+        ...r,
+        cloneRule,
+        toggleLockRule,
+        removeRule,
+        shiftRuleUp,
+        shiftRuleDown
+      }
+    )
   );
 });
 var RuleComponents = React9.memo((r) => {
@@ -4444,13 +4481,13 @@ var React10 = __toESM(require("react"));
 var import_react15 = require("react");
 var RuleGroup = React10.memo((props) => {
   const rg = useRuleGroup(props);
-  rg.addRule = useStopEventPropagation(rg.addRule);
-  rg.addGroup = useStopEventPropagation(rg.addGroup);
-  rg.cloneGroup = useStopEventPropagation(rg.cloneGroup);
-  rg.toggleLockGroup = useStopEventPropagation(rg.toggleLockGroup);
-  rg.removeGroup = useStopEventPropagation(rg.removeGroup);
-  rg.shiftGroupUp = useStopEventPropagation(rg.shiftGroupUp);
-  rg.shiftGroupDown = useStopEventPropagation(rg.shiftGroupDown);
+  const addRule = useStopEventPropagation(rg.addRule);
+  const addGroup = useStopEventPropagation(rg.addGroup);
+  const cloneGroup = useStopEventPropagation(rg.cloneGroup);
+  const toggleLockGroup = useStopEventPropagation(rg.toggleLockGroup);
+  const removeGroup = useStopEventPropagation(rg.removeGroup);
+  const shiftGroupUp = useStopEventPropagation(rg.shiftGroupUp);
+  const shiftGroupDown = useStopEventPropagation(rg.shiftGroupDown);
   return /* @__PURE__ */ React10.createElement(
     "div",
     {
@@ -4464,8 +4501,32 @@ var RuleGroup = React10.memo((props) => {
       "data-level": rg.path.length,
       "data-path": JSON.stringify(rg.path)
     },
-    /* @__PURE__ */ React10.createElement("div", { ref: rg.dropRef, className: rg.classNames.header }, /* @__PURE__ */ React10.createElement(RuleGroupHeaderComponents, { ...rg })),
-    /* @__PURE__ */ React10.createElement("div", { className: rg.classNames.body }, /* @__PURE__ */ React10.createElement(RuleGroupBodyComponents, { ...rg }))
+    /* @__PURE__ */ React10.createElement("div", { ref: rg.dropRef, className: rg.classNames.header }, /* @__PURE__ */ React10.createElement(
+      RuleGroupHeaderComponents,
+      {
+        ...rg,
+        addRule,
+        addGroup,
+        cloneGroup,
+        toggleLockGroup,
+        removeGroup,
+        shiftGroupUp,
+        shiftGroupDown
+      }
+    )),
+    /* @__PURE__ */ React10.createElement("div", { className: rg.classNames.body }, /* @__PURE__ */ React10.createElement(
+      RuleGroupBodyComponents,
+      {
+        ...rg,
+        addRule,
+        addGroup,
+        cloneGroup,
+        toggleLockGroup,
+        removeGroup,
+        shiftGroupUp,
+        shiftGroupDown
+      }
+    ))
   );
 });
 var RuleGroupHeaderComponents = React10.memo(
